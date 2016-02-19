@@ -1,24 +1,30 @@
 #include "bin_storage.h"
 
-
-template<> void write<Mat>(ostream& out,const Mat &_data)
+cv::BFileStorage::BFileStorage(const string &filename, Mode flags): _mode(flags)
 {
-        write(out, _data.rows);
-        write(out, _data.cols);
-        write(out, _data.type());
-        const size_t bytes = _data.cols * _data.elemSize();
-        for (int i = 0; i < _data.rows; i++)
-            out.write(reinterpret_cast<const char*>(_data.ptr(i, 0)), bytes);
+    if (flags == Mode::READ)
+    {
+        _fin.open(filename, ios::in | ios::binary);
+        _status = _fin.is_open();
+    }
+    if (flags == Mode::WRITE)
+    {
+        _fout.open(filename, ios::out | ios::binary);
+        _status = _fout.is_open();
+    }
+}
+bool cv::BFileStorage::isOpened()
+{
+    return _status;
+}
+void cv::BFileStorage::release()
+{
+    if (!isOpened())
+        return;
+    if (_mode == Mode::READ)
+        _fin.close();
+    else if (_mode == Mode::WRITE)
+        _fout.close();
 }
 
-template<> void read<Mat>(istream& in,Mat &_data)
-{
-    int rows, cols, type;
-    read(in, rows);
-    read(in, cols);
-    read(in, type);
-    _data.create(rows, cols, type);
-    const size_t bytes = _data.cols * _data.elemSize();
-    for (int i = 0; i < _data.rows; i++)
-        in.read(reinterpret_cast<char*>(_data.ptr(i, 0)), bytes);
-}
+
