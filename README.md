@@ -2,6 +2,63 @@
 
 OpenCV binary storage format alternative to xml/yml FileStorage
 
+```C++
+#include <vector>
+#include "bin_storage.h"
+
+using namespace std;
+using namespace cv;
+
+class B
+{
+private:
+vector<float> _vec;
+float _float;
+int _int;
+Mat _mat;
+
+public:
+void write(ostream &f)
+{
+cv::writeB(f, _vec);
+cv::writeB(f, _float);
+cv::writeB(f, _int);
+cv::writeB(f, _mat);
+}
+void read(istream &f)
+{
+cv::readB(f, _vec);
+cv::readB(f, _float);
+cv::readB(f, _int);
+cv::readB(f, _mat);
+}
+};
+
+static void writeB(ostream &f, const B &example)
+{
+example.write(f);
+}
+static void readB(istream &f, B &example)
+{
+example.read(f);
+}
+
+
+int main(int , char**)
+{
+string filename = "file.bin";
+B writeExample;
+
+BFileStorage bfs(filename, BFileStorage::Mode::WRITE);
+bfs << writeExample;
+bfs.release();
+
+B readExample;
+BFileStorage bfs2(filename, BFileStorage::Mode::READ);
+bfs2 >> readExample;
+bfs2.release();
+}
+```
 
  ```
  BSD 3-Clause License (https://www.tldrlegal.com/l/bsd3)
