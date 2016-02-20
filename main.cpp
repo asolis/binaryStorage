@@ -46,7 +46,7 @@ private:
     Mat _mat;
     
 public:
-    void write(ostream &f)
+    void write(ostream &f) const
     {
         cv::writeB(f, _vec);
         cv::writeB(f, _float);
