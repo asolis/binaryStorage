@@ -73,22 +73,7 @@ namespace cv
         
     };
       
-    template<typename _Tp>
-    BFileStorage& operator << (BFileStorage& fs, const _Tp& value)
-    {
-        if (fs.isOpened() && fs._mode == BFileStorage::Mode::WRITE)
-        writeB(fs._fout, value);
-        return fs;
-    }
-        
-    template<typename _Tp>
-    BFileStorage& operator >> (BFileStorage& fs, _Tp& value)
-    {
-        if (fs.isOpened() && fs._mode == BFileStorage::Mode::READ)
-        readB(fs._fin, value);
-        return fs;
-    }
-        
+
 
 
     template<typename T>
@@ -142,7 +127,7 @@ namespace cv
     {
         readScalar(in, _data);
     }
-
+    
 
     static inline void writeB(ostream& out, const Mat &_data)
     {
@@ -302,7 +287,10 @@ namespace cv
     {
         writeScalar(out, vec.size());
         for (typename vector<vector<T>>::const_iterator it = vec.begin(); it!=vec.end(); it++)
-            writeB(out, *it);
+            writeScalar(out, it->size());
+        for (typename vector<vector<T>>::const_iterator it = vec.begin(); it!=vec.end(); it++)
+            for (typename vector<T>::const_iterator it2 = it->begin(); it2!=it->end(); it2++)
+                writeB(out, *it2);
     }
 
 
@@ -331,11 +319,70 @@ namespace cv
     template<typename T>
     static inline void readB(istream& in, vector<vector<T>> &vec)
     {
-        size_t size;
-        readScalar(in, size);
-        vec.resize(size);
-        for (typename vector<vector<T>>::iterator it; it != vec.end(); it++)
-            readB(in, *it);
+        vector<size_t> _sizes;
+        readB(in, _sizes);
+        vec.clear();
+        for (typename vector<size_t>::iterator it = _sizes.begin(); it != _sizes.end(); it++)
+        {
+            vector<T> _tmp;
+            _tmp.resize(*it);
+            for (size_t i = 0; i < *it; i++)
+                readB(in, _tmp[i]);
+            
+            vec.push_back(_tmp);
+        }
+    }
+    
+    static inline void writeB(ostream& out, const KeyPoint &_kp)
+    {
+        writeB(out, _kp.pt);
+        writeScalar(out, _kp.size);
+        writeScalar(out, _kp.angle);
+        writeScalar(out, _kp.response);
+        writeScalar(out, _kp.octave);
+        writeScalar(out, _kp.class_id);
+    }
+    static inline void readB(ifstream &in, KeyPoint &_kp)
+    {
+        readB(in, _kp.pt);
+        readScalar(in, _kp.size);
+        readScalar(in, _kp.angle);
+        readScalar(in, _kp.response);
+        readScalar(in, _kp.octave);
+        readScalar(in, _kp.class_id);
+    }
+    
+    
+    static inline void writeB(ostream &out, const DMatch &_kp)
+    {
+        writeScalar(out, _kp.queryIdx);
+        writeScalar(out, _kp.trainIdx);
+        writeScalar(out, _kp.imgIdx);
+        writeScalar(out, _kp.distance);
+    }
+    static inline void readB(ifstream &in, DMatch &_kp)
+    {
+        readScalar(in, _kp.queryIdx);
+        readScalar(in, _kp.trainIdx);
+        readScalar(in, _kp.imgIdx);
+        readScalar(in, _kp.distance);
+    }
+    
+    
+    template<typename _Tp>
+    BFileStorage& operator << (BFileStorage& fs, const _Tp& value)
+    {
+        if (fs.isOpened() && fs._mode == BFileStorage::Mode::WRITE)
+            writeB(fs._fout, value);
+        return fs;
+    }
+    
+    template<typename _Tp>
+    BFileStorage& operator >> (BFileStorage& fs, _Tp& value)
+    {
+        if (fs.isOpened() && fs._mode == BFileStorage::Mode::READ)
+            readB(fs._fin, value);
+        return fs;
     }
     
 }
