@@ -32,8 +32,10 @@
  **************************************************************************************************
  **************************************************************************************************/
 
-#ifndef __BIN__STORAGE__H
-#define __BIN__STORAGE__H
+#ifndef __OPENCV_CORE_BPERSISTENCE_HPP__
+#define __OPENCV_CORE_BPERSISTENCE_HPP__
+
+#ifdef __cplusplus
 
 #include <map>
 #include <vector>
@@ -45,7 +47,6 @@ using namespace std;
 
 namespace cv
 {
-    
     class BFileStorage
     {
 
@@ -72,9 +73,6 @@ namespace cv
         int _status;
         
     };
-      
-
-
 
     template<typename T>
     static inline void writeScalar(ostream& out, const T& data) {
@@ -128,7 +126,6 @@ namespace cv
         readScalar(in, _data);
     }
     
-
     static inline void writeB(ostream& out, const Mat &_data)
     {
         writeScalar(out, _data.rows);
@@ -268,7 +265,8 @@ namespace cv
     template<typename T>
     static inline void writeB(ostream& out, const vector<T>& vec) {
         writeScalar(out, vec.size());
-        for (typename  vector<T>::const_iterator it = vec.begin(); it!=vec.end(); it++)
+        for (typename  vector<T>::const_iterator it = vec.begin();
+                                                 it != vec.end(); it++)
             writeB(out, *it);
     }
 
@@ -276,7 +274,8 @@ namespace cv
     static inline void writeB(ostream& out, const map<K,V> &dict)
     {
         writeScalar(out, dict.size());
-        for (typename map<K,V>::const_iterator it=dict.begin(); it!=dict.end(); ++it)
+        for (typename map<K,V>::const_iterator it = dict.begin();
+                                               it != dict.end(); ++it)
         {
             writeB(out, it->first);
             writeB(out, it->second);
@@ -286,13 +285,21 @@ namespace cv
     static inline void writeB(ostream& out, const vector<vector<T>> &vec)
     {
         writeScalar(out, vec.size());
-        for (typename vector<vector<T>>::const_iterator it = vec.begin(); it!=vec.end(); it++)
+        for (typename vector<vector<T>>::const_iterator it = vec.begin();
+                                                        it!= vec.end(); it++)
+        {
             writeScalar(out, it->size());
-        for (typename vector<vector<T>>::const_iterator it = vec.begin(); it!=vec.end(); it++)
-            for (typename vector<T>::const_iterator it2 = it->begin(); it2!=it->end(); it2++)
+        }
+        for (typename vector<vector<T>>::const_iterator it = vec.begin();
+                                                        it != vec.end(); it++)
+        {
+            for (typename vector<T>::const_iterator it2 = it->begin();
+                                                    it2 != it->end(); it2++)
+            {
                 writeB(out, *it2);
+            }
+        }
     }
-
 
     template<typename T>
     static inline void readB(istream& in, vector<T>& vec) {
@@ -302,6 +309,7 @@ namespace cv
         for (size_t i = 0; i < vec.size(); i++)
             readB(in, vec[i]);
     }
+    
     template<typename K, typename V>
     static inline void readB(istream& in,map<K,V> &dict)
     {
@@ -316,13 +324,15 @@ namespace cv
             dict.insert(pair<K,V>(key,value));
         }
     }
+    
     template<typename T>
     static inline void readB(istream& in, vector<vector<T>> &vec)
     {
         vector<size_t> _sizes;
         readB(in, _sizes);
         vec.clear();
-        for (typename vector<size_t>::iterator it = _sizes.begin(); it != _sizes.end(); it++)
+        for (typename vector<size_t>::iterator it = _sizes.begin();
+                                            it != _sizes.end(); it++)
         {
             vector<T> _tmp;
             _tmp.resize(*it);
@@ -368,7 +378,6 @@ namespace cv
         readScalar(in, _kp.distance);
     }
     
-    
     template<typename _Tp>
     BFileStorage& operator << (BFileStorage& fs, const _Tp& value)
     {
@@ -386,5 +395,5 @@ namespace cv
     }
     
 }
-
+#endif
 #endif 

@@ -16,6 +16,7 @@ MESSAGE(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
 FILE(GLOB files
   "*.h"
+  "*.hpp"
   "*.cpp"
 )
 FILE(GLOB hidden

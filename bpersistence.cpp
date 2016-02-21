@@ -32,7 +32,7 @@
  **************************************************************************************************
  **************************************************************************************************/
 
-#include "bin_storage.h"
+#include "bpersistence.hpp"
 
 cv::BFileStorage::BFileStorage(const string &filename, Mode flags): _mode(flags)
 {
