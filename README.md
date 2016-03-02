@@ -9,10 +9,10 @@ current available in OpenCV.
 The implementation allows you to save user defined and OpenCV types
 using the hdf5 file format.
 
-To avoid name coalition the following class names are renamed:
-	FileStorage  	 ->  Storage
-	FileNode     	 ->  StorageNode
-	FileNodeIterator ->  NodeIterator
+To avoid name collision the following class names are renamed:
+	FileStorage  	 ->  Storage,
+	FileNode     	 ->  StorageNode, and
+	FileNodeIterator ->  NodeIterator.
 	 
 
 ```C++
