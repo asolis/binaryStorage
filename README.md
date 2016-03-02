@@ -6,10 +6,10 @@ Below you will find the same example used in OpenCV documentation to demonstrate
 the compatibility/similarity between our implementation and the current xml/yml storage 
 current available in OpenCV.
 
-This implementation allows you to save to disk user defined and OpenCV types
+The implementation allows you to save user defined and OpenCV types
 using the hdf5 file format.
 
-To avoid name coalitions the classes names are renamed as follow:
+To avoid name coalition the following class names are renamed:
 	FileStorage  	 ->  Storage
 	FileNode     	 ->  StorageNode
 	FileNodeIterator ->  NodeIterator
