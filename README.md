@@ -1,62 +1,181 @@
 # binaryStorage
 
-OpenCV binary storage format alternative to xml/yml FileStorage
+OpenCV HDF5 binary storage format alternative to xml/yml FileStorage.
+
+Below you will find the same example used in OpenCV documentation to demonstrate
+the compatibility/similarity between our implementation and the current xml/yml storage 
+current available in OpenCV.
+
+This implementation allows you to save to disk user defined and OpenCV types
+using the hdf5 file format.
+
+To avoid name coalitions the classes names are renamed as follow:
+	FileStorage  	 ->  Storage
+	FileNode     	 ->  StorageNode
+	FileNodeIterator ->  NodeIterator
+	 
 
 ```C++
-#include <vector>
-#include "bin_storage.h"
 
-using namespace std;
+#include "h5persistence.hpp"
+
 using namespace cv;
+using namespace std;
 
-class B
+class MyData
 {
-private:
-vector<float> _vec;
-float _float;
-int _int;
-Mat _mat;
-
 public:
-void write(ostream &f)
-{
-cv::writeB(f, _vec);
-cv::writeB(f, _float);
-cv::writeB(f, _int);
-cv::writeB(f, _mat);
-}
-void read(istream &f)
-{
-cv::readB(f, _vec);
-cv::readB(f, _float);
-cv::readB(f, _int);
-cv::readB(f, _mat);
-}
+    MyData() : A(0), X(0), id()
+    {}
+
+    // explicit to avoid implicit conversion
+    explicit MyData(int)
+        : A(97), X(CV_PI), id("mydata1234")
+    {}
+
+    //Write serialization for this class
+    //Using cv::Storage instead of cv::FileStorage
+    void write(cv::Storage& fs) const
+    {
+        fs << "{" << "A" << A << "X" << X << "id" << id << "}";
+    }
+
+    //Read serialization for this class
+    //Using cv::StorageNode instead of cv::FileNode
+    void read(const cv::StorageNode& node)
+    {
+        A = (int)node["A"];
+        X = (double)node["X"];
+        id = (string)node["id"];
+    }
+    // Data Members
+public:
+    int A;
+    double X;
+    string id;
 };
 
-static void writeB(ostream &f, const B &example)
+//These write and read functions must be defined for
+//the serialization in FileStorage to work.
+//Note the changes cv::Storage and cv::StorageNode
+static void write(cv::Storage& fs, const std::string&, const MyData& x)
 {
-example.write(f);
+    x.write(fs);
 }
-static void readB(istream &f, B &example)
+static void read(const cv::StorageNode& node, MyData& x,
+                    const MyData& default_value = MyData())
 {
-example.read(f);
+    if(node.empty())
+        x = default_value;
+    else
+        x.read(node);
 }
 
-
-int main(int , char**)
+// This function will print our custom class to the console
+static ostream& operator<<(ostream& out, const MyData& m)
 {
-string filename = "file.bin";
-B writeExample;
+    out << "{ id = " << m.id << ", ";
+    out << "X = " << m.X << ", ";
+    out << "A = " << m.A << "}";
+    return out;
+}
 
-BFileStorage bfs(filename, BFileStorage::Mode::WRITE);
-bfs << writeExample;
-bfs.release();
+int main(int ac, char** av)
+{
+    string filename = "example.h5";
+    //write
+    {
+        Mat R = Mat_<uchar>::eye(3, 3),
+        T = Mat_<double>::zeros(3, 1);
+        MyData m(1);
 
-B readExample;
-BFileStorage bfs2(filename, BFileStorage::Mode::READ);
-bfs2 >> readExample;
-bfs2.release();
+        Storage fs(filename, Storage::WRITE);
+
+        fs << "iterationNr" << 100;
+        // text - string sequence
+        fs << "strings" << "[";
+        fs << "image1.jpg" << "Awesomeness" << "baboon.jpg";
+        // close sequence
+        fs << "]";
+
+        // text - mapping
+        fs << "Mapping";
+        fs << "{" << "One" << 1;
+        fs <<        "Two" << 2 << "}";
+
+        // cv::Mat
+        fs << "R" << R;
+        fs << "T" << T;
+
+        // your own data structures
+        fs << "MyData" << m;
+
+        // explicit close
+        fs.release();
+        cout << "Write Done." << endl;
+    }
+    //read
+    {
+        cout << endl << "Reading: " << endl;
+        cv::Storage fs;
+        fs.open(filename, cv::Storage::READ);
+
+        int itNr;
+        //fs["iterationNr"] >> itNr;
+        itNr = (int) fs["iterationNr"];
+        cout << itNr;
+        if (!fs.isOpened())
+        {
+            cerr << "Failed to open " << filename << endl;
+
+            return 1;
+        }
+
+        // Read string sequence - Get node
+        cv::StorageNode n = fs["strings"];
+        if (n.type() != cv::StorageNode::SEQ)
+        {
+            cerr << "strings is not a sequence! FAIL" << endl;
+            return 1;
+        }
+
+        // Go through the node
+        NodeIterator it = n.begin(), it_end = n.end();
+        for (; it != it_end; ++it)
+            cout << (string)*it << endl;
+
+        // Read mappings from a sequence
+        n = fs["Mapping"];
+        cout << "Two  " << (int)(n["Two"]) << "; ";
+        cout << "One  " << (int)(n["One"]) << endl << endl;
+
+
+        MyData m;
+        Mat R, T;
+
+        // Read cv::Mat
+        fs["R"] >> R;
+        fs["T"] >> T;
+        // Read your own structure_
+        fs["MyData"] >> m;
+
+        cout << endl << "R = " << R << endl;
+        cout << "T = " << T << endl << endl;
+        cout << "MyData = " << endl << m << endl << endl;
+
+        //Show default behavior for non existing nodes
+        cout << "Attempt to read NonExisting " <<
+                " (should initialize the data structure with its default).";
+        
+        fs["NonExisting"] >> m;
+        cout << endl << "NonExisting = " << endl << m << endl;
+    }
+
+    cout << endl
+    << "Tip: Open up " << filename <<
+    " with a text editor to see the serialized data." << endl;
+    
+    return 0;
 }
 ```
 
