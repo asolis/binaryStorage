@@ -97,11 +97,13 @@ static ostream& operator<<(ostream& out, const MyData& m)
 
 int main(int ac, char** av)
 {
+
+
     string filename = "example.h5";
     //write
     {
-        Mat R = Mat_<uchar>::eye(3, 3),
-        T = Mat_<double>::zeros(3, 1);
+        Mat R = Mat_<uchar>::eye(3, 3) * 32,
+        T = Mat_<double>::ones(3, 1)* 10.342 ;
         MyData m(1);
 
         Storage fs(filename, Storage::WRITE);
@@ -174,7 +176,7 @@ int main(int ac, char** av)
         // Read your own structure_
         fs["MyData"] >> m;
 
-        cout << endl << "R = " << R << endl;
+        cout << endl << R.cols << " " << R.rows << "R = " << R << endl;
         cout << "T = " << T << endl << endl;
         cout << "MyData = " << endl << m << endl << endl;
 
@@ -189,6 +191,6 @@ int main(int ac, char** av)
     cout << endl
     << "Tip: Open up " << filename <<
     " with a text editor to see the serialized data." << endl;
-    
+
     return 0;
 }

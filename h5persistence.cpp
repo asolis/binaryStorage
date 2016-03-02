@@ -675,18 +675,36 @@ void cv::writeDataset(H5::H5File &file, const std::string &name, const std::stri
     attr.insert(std::make_pair(StorageNode::TYPE, StorageNode::STRING));
     writeDataset1D(file, H5::StrType(H5::PredType::C_S1, H5T_VARIABLE), name, arr_c_str.data(), attr, 1);
 }
+
 void cv::writeDataset(H5::H5File &file, const std::string &name, const cv::Mat &data)
 {
 
+
     hsize_t fdims[2], mdims[1];
     fdims[0] = static_cast<hsize_t>(data.rows);
-    fdims[1] = data.cols * data.elemSize();
+    fdims[1] = data.cols * data.channels();
+    H5::DataType type;
+
+    switch ( data.depth())
+    {
+        case CV_8U:  type = H5::PredType::NATIVE_UCHAR; break;
+        case CV_8S:  type = H5::PredType::NATIVE_CHAR; break;
+        case CV_16U: type = H5::PredType::NATIVE_UINT16; break;
+        case CV_16S: type = H5::PredType::NATIVE_INT16; break;
+        case CV_32S: type = H5::PredType::NATIVE_UINT; break;
+        case CV_32F: type = H5::PredType::NATIVE_FLOAT; break;
+        case CV_64F: type = H5::PredType::NATIVE_DOUBLE; break;
+        default:
+            type = H5::PredType::NATIVE_UCHAR;
+            fdims[0]  = data.cols * data.elemSize();
+            break;
+    }
     mdims[0] = fdims[1];
 
     H5::DataSpace fspace(2, fdims);
     H5::DataSpace mspace(1, mdims);
 
-    H5::DataSet dataset(file.createDataSet(name.c_str(), H5::PredType::NATIVE_UCHAR, fspace));
+    H5::DataSet dataset(file.createDataSet(name.c_str(), type, fspace));
     setIntAttribute(dataset, StorageNode::ROWS,  data.rows);
     setIntAttribute(dataset, StorageNode::COLS,  data.cols);
     setIntAttribute(dataset, StorageNode::MTYPE, data.type());
@@ -708,7 +726,7 @@ void cv::writeDataset(H5::H5File &file, const std::string &name, const cv::Mat &
         block[0]  = 1;
         mspace.selectHyperslab( H5S_SELECT_SET, count, offset, NULL, block);
 
-        dataset.write(data.ptr(i,0), H5::PredType::NATIVE_UCHAR, mspace, fspace);
+        dataset.write(data.ptr(i,0), type, mspace, fspace);
     }
 }
 void cv::writeDataset(H5::H5File &file, const std::string &name, const SparseMat &data)
@@ -926,7 +944,7 @@ bool cv::readDataset(const H5::H5File &file, const std::string &name, cv::Mat &d
     if (!read)
         return read;
 
-    data.create(row, col, type);
+    data.create(row, col, mtype);
     dataset.read(data.data, dataset.getDataType());
     return true;
 

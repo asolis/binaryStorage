@@ -160,7 +160,6 @@ namespace cv
         virtual NodeIterator begin() const;
         virtual NodeIterator end() const;
     };
-
     // Class to iterate over a StorageNode
     // Usage same as FileNodeIterator
     class NodeIterator
@@ -502,6 +501,8 @@ namespace cv
         if (!cv::readDataset<_Tp>(*fn._fn, fn._name, _data))
             _data = default_value;
     }
+
+    /***********Operators********/
 
     cv::Storage& operator << (cv::Storage& fs, const std::string &str);
 
