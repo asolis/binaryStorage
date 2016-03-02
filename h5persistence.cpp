@@ -339,6 +339,41 @@ cv::StorageNode cv::Storage::operator[](const char* nodename) const
 {
     return this->operator[](std::string(nodename));
 }
+
+std::string cv::Storage::fullName(const std::string &node) const
+{
+    std::stringstream ss;
+    ss << "/";
+    for (size_t i = 0; i < groups.size(); i++)
+    {
+        ss << groups[i] << "/";
+    }
+    ss << ((node.empty())? std::to_string(counter.back()): node);
+    return ss.str();
+}
+void cv::Storage::nodeWritten()
+{
+    if (state == cv::Storage::VALUE_EXPECTED &&
+        elname == "" &&
+        groups.size() > 0 )
+    {
+        counter.back()++;
+    }
+}
+void cv::Storage::startScope(const std::string &name, int type)
+{
+    cv::createGroup(*_bfs, fullName(name), type);
+    groups.push_back(((name.empty())? std::to_string(counter.back()): name));
+    counter.push_back(0);
+}
+void cv::Storage::endScope()
+{
+    groups.pop_back();
+    counter.pop_back();
+
+}
+
+
 cv::Storage& cv::operator<< (cv::Storage& fs, const std::string &str)
 {
     const char* _str = str.c_str();
@@ -371,7 +406,7 @@ cv::Storage& cv::operator<< (cv::Storage& fs, const std::string &str)
             cv::Storage::INSIDE_MAP )
     {
 
-        if( !cv::cv_isalpha(*_str) )
+        if( !cv::Storage::cv_isalpha(*_str) )
             CV_Error_( CV_StsError, ("Incorrect element name %s", _str) );
         fs.elname = str;
         fs.state = cv::Storage::VALUE_EXPECTED +
@@ -655,8 +690,7 @@ void cv::writeDataset(H5::H5File &file, const std::string &name, const cv::Mat &
     setIntAttribute(dataset, StorageNode::ROWS,  data.rows);
     setIntAttribute(dataset, StorageNode::COLS,  data.cols);
     setIntAttribute(dataset, StorageNode::MTYPE, data.type());
-    setIntAttribute(dataset, StorageNode::TYPE,  StorageNode::USER);
-
+    setNodeType(dataset, StorageNode::USER);
 
     hsize_t offset[2], count[2], block[2];
     for (size_t i = 0; i < data.rows; i++)
