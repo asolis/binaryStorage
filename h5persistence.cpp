@@ -47,31 +47,37 @@ _type(StorageNode::NONE), _fn(Ptr<H5::H5File>()), _name(""), _sub(0)
 cv::StorageNode::StorageNode(const Ptr<H5::H5File> &f, const std::string &name):
 _fn(f), _name(name)
 {
-    H5::H5Location *loc = NULL;
+    bool _read = false;
     try
     {
         H5::Exception::dontPrint();
-        loc = new H5::DataSet(f->openDataSet(name));
+        H5::DataSet *loc = new H5::DataSet(f->openDataSet(name));
+        bool read = cv::getNodeType(*loc, _type);
+        if (!read)
+            _type = StorageNode::NONE;
+        cv::listSubnodes(*loc, _sub);
+        _read = true;
+        delete loc;
     }
     catch( H5::FileIException not_found_error)
     {
         try
         {
             H5::Exception::dontPrint();
-            loc = new H5::Group(f->openGroup(name));
+            H5::Group *loc = new H5::Group(f->openGroup(name));
+            bool read = cv::getNodeType(*loc, _type);
+            if (!read)
+                _type = StorageNode::NONE;
+            cv::listSubnodes(*loc, _sub);
+            _read = true;
+            delete loc;
         }
         catch( H5::FileIException not_found_error)
         {
 
         }
     }
-    if (loc)
-    {
-        bool read = cv::getNodeType(*loc, _type);
-        if (!read) _type = StorageNode::NONE;
-        cv::listSubnodes(*loc, _sub);
-    }
-    else
+    if (!_read)
         _type = StorageNode::NONE;
 }
 
