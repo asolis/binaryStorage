@@ -179,7 +179,7 @@ cv::StorageNode::operator double() const
 }
 cv::StorageNode::operator std::string() const
 {
-    string value;
+    std::string value;
     if (!cv::readDataset(*_fn, _name, value))
         return "";
     return value;
