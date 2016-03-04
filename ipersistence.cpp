@@ -164,7 +164,7 @@ cv2::FileStorage::FileStorage(const std::string &filename,
     if ((flags & cv2::FileStorage::FORMAT_MASK) == cv2::FileStorage::FORMAT_H5)
         _fw = new cv2::H5FileWriter(filename, flags);
     else
-        _fw = cv::Ptr<FileWriter>();
+         _fw = new cv2::H5FileWriter(filename, flags); //xml
    // _fw->open(filename, flags, encoding);
 }
 
@@ -176,7 +176,7 @@ cv2::FileStorage::FileStorage(const std::string &filename,
     if ((flags & cv2::FileStorage::FORMAT_MASK) == cv2::FileStorage::FORMAT_H5)
         _fw = new cv2::H5FileWriter(filename, flags);
     else
-        _fw = cv::Ptr<FileWriter>();
+         _fw = new cv2::H5FileWriter(filename, flags); //xml
 
     return isOpened();
 }
