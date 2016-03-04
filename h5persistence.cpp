@@ -93,7 +93,7 @@ cv::StorageNode cv::StorageNode::operator[](const std::string &nodename) const
         return StorageNode(_fn, fName);
     }
     else
-        StorageNode();
+        return StorageNode();
 }
 
 cv::StorageNode cv::StorageNode::operator[](const char *nodename) const
@@ -286,11 +286,11 @@ bool cv::NodeIterator::operator < (const NodeIterator& rhs)
 
 /***** Storage members and functions ******/
 cv::Storage::Storage():
-opened(false), state(UNDEFINED), root("/")
+ state(UNDEFINED), opened(false)
 {}
 
 cv::Storage::Storage(const std::string &filename, int flags):
-opened(false), state(UNDEFINED), root("/")
+state(UNDEFINED), opened(false)
 {
     open(filename, flags);
 }
@@ -1138,7 +1138,8 @@ herr_t cv::readH5NodeInfo(hid_t loc_id, const char *name, const H5L_info_t *linf
 
 void cv::listSubnodes(H5::H5Location &node, std::vector<std::string> &subnodes)
 {
-    herr_t idx = H5Literate(node.getId(), H5_INDEX_NAME, H5_ITER_INC,
+    //herr_t idx =
+    H5Literate(node.getId(), H5_INDEX_NAME, H5_ITER_INC,
                             NULL, readH5NodeInfo, &subnodes);
     int type;
     bool read = getNodeType(node,type);

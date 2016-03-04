@@ -33,9 +33,9 @@
  **************************************************************************************************/
 
 #include "h5persistence.hpp"
+#include "ipersistence.hpp"
 
-using namespace cv;
-using namespace std;
+
 
 class MyData
 {
@@ -50,34 +50,34 @@ public:
 
     //Write serialization for this class
     //Using cv::Storage instead of cv::FileStorage
-    void write(cv::Storage& fs) const
+    void write(cv2::FileStorage& fs) const
     {
         fs << "{" << "A" << A << "X" << X << "id" << id << "}";
     }
 
     //Read serialization for this class
     //Using cv::StorageNode instead of cv::FileNode
-    void read(const cv::StorageNode& node)
+    void read(const cv2::FileNode& node)
     {
         A = (int)node["A"];
         X = (double)node["X"];
-        id = (string)node["id"];
+        id = (std::string)node["id"];
     }
     // Data Members
 public:
     int A;
     double X;
-    string id;
+    std::string id;
 };
 
 //These write and read functions must be defined for
 //the serialization in FileStorage to work.
 //Note the changes cv::Storage and cv::StorageNode
-static void write(cv::Storage& fs, const std::string&, const MyData& x)
+static void write(cv2::FileStorage& fs, const std::string&, const MyData& x)
 {
     x.write(fs);
 }
-static void read(const cv::StorageNode& node, MyData& x,
+static void read(const cv2::FileNode& node, MyData& x,
                     const MyData& default_value = MyData())
 {
     if(node.empty())
@@ -87,7 +87,7 @@ static void read(const cv::StorageNode& node, MyData& x,
 }
 
 // This function will print our custom class to the console
-static ostream& operator<<(ostream& out, const MyData& m)
+static std::ostream& operator<<(std::ostream& out, const MyData& m)
 {
     out << "{ id = " << m.id << ", ";
     out << "X = " << m.X << ", ";
@@ -99,14 +99,14 @@ int main(int ac, char** av)
 {
 
 
-    string filename = "example.h5";
+    std::string filename = "example.h5";
     //write
     {
-        Mat R = Mat_<uchar>::eye(3, 3) * 32,
-        T = Mat_<double>::ones(3, 1)* 10.342 ;
+        cv::Mat R = cv::Mat_<uchar>::eye(3, 3) * 32,
+        T = cv::Mat_<double>::ones(3, 1)* 10.342 ;
         MyData m(1);
 
-        Storage fs(filename, Storage::WRITE);
+        cv2::FileStorage fs(filename, cv2::FileStorage::WRITE | cv2::FileStorage::FORMAT_H5);
 
         fs << "iterationNr" << 100;
         // text - string sequence
@@ -129,68 +129,68 @@ int main(int ac, char** av)
 
         // explicit close
         fs.release();
-        cout << "Write Done." << endl;
+        std::cout << "Write Done." << std::endl;
     }
     //read
     {
-        cout << endl << "Reading: " << endl;
-        cv::Storage fs;
-        fs.open(filename, cv::Storage::READ);
+        std::cout << std::endl << "Reading: " << std::endl;
+        cv2::FileStorage fs;
+        fs.open(filename, cv2::FileStorage::READ | cv2::FileStorage::FORMAT_H5);
 
         int itNr;
         //fs["iterationNr"] >> itNr;
         itNr = (int) fs["iterationNr"];
-        cout << itNr;
+        std::cout << itNr;
         if (!fs.isOpened())
         {
-            cerr << "Failed to open " << filename << endl;
+            std::cerr << "Failed to open " << filename << std::endl;
 
             return 1;
         }
 
         // Read string sequence - Get node
-        cv::StorageNode n = fs["strings"];
-        if (n.type() != cv::StorageNode::SEQ)
+        cv2::FileNode n = fs["strings"];
+        if (n.type() != cv2::FileNode::SEQ)
         {
-            cerr << "strings is not a sequence! FAIL" << endl;
+            std::cerr << "strings is not a sequence! FAIL" << std::endl;
             return 1;
         }
 
         // Go through the node
-        NodeIterator it = n.begin(), it_end = n.end();
+        cv2::FileNodeIterator it = n.begin(), it_end = n.end();
         for (; it != it_end; ++it)
-            cout << (string)*it << endl;
+            std::cout << (std::string)*it << std::endl;
 
         // Read mappings from a sequence
         n = fs["Mapping"];
-        cout << "Two  " << (int)(n["Two"]) << "; ";
-        cout << "One  " << (int)(n["One"]) << endl << endl;
+        std::cout << "Two  " << (int)(n["Two"]) << "; ";
+        std::cout << "One  " << (int)(n["One"]) << std::endl << std::endl;
 
-
+        
         MyData m;
-        Mat R, T;
+        cv::Mat R, T;
 
         // Read cv::Mat
-        fs["R"] >> R;
+        (cv2::FileNode)fs["R"] >> R;
         fs["T"] >> T;
         // Read your own structure_
         fs["MyData"] >> m;
 
-        cout << endl << R.cols << " " << R.rows << "R = " << R << endl;
-        cout << "T = " << T << endl << endl;
-        cout << "MyData = " << endl << m << endl << endl;
+        std::cout << std::endl << R.cols << " " << R.rows << "R = " << R << std::endl;
+        std::cout << "T = " << T << std::endl << std::endl;
+        std::cout << "MyData = " << std::endl << m << std::endl << std::endl;
 
         //Show default behavior for non existing nodes
-        cout << "Attempt to read NonExisting " <<
+        std::cout << "Attempt to read NonExisting " <<
                 " (should initialize the data structure with its default).";
         
         fs["NonExisting"] >> m;
-        cout << endl << "NonExisting = " << endl << m << endl;
+        std::cout << std::endl << "NonExisting = " << std::endl << m << std::endl;
     }
 
-    cout << endl
+    std::cout << std::endl
     << "Tip: Open up " << filename <<
-    " with a text editor to see the serialized data." << endl;
+    " with a text editor to see the serialized data." << std::endl;
 
     return 0;
 }

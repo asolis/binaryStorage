@@ -52,9 +52,6 @@ namespace cv
     // Usage same as FileStorage
     class Storage
     {
-    private:
-        bool opened;
-
     public:
         enum Mode
         {
@@ -81,6 +78,7 @@ namespace cv
         virtual cv::StorageNode operator[](const String& nodename) const;
         virtual cv::StorageNode operator[](const char* nodename) const;
         virtual std::string fullName(const std::string &node) const;
+
         virtual void nodeWritten();
         virtual void startScope(const std::string &name, int type);
         virtual void endScope();
@@ -88,11 +86,12 @@ namespace cv
         int  state;
         std::string elname;
         std::vector<char> structs;
-        std::string root;
+        bool opened;
 
         Ptr<H5::H5File> _bfs;
         std::vector<std::string> groups;
         std::vector<size_t> counter;
+
 
         static inline bool cv_isalpha(char c)
         {
